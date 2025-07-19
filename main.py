@@ -2,11 +2,9 @@ import requests
 from tqdm import tqdm
 import json
 
-class DogCeo:
-    token = 'ВВЕДИТЕ СВОЙ ТОКЕН ЯНДЕКС ДИСКА'
-    group = 'FPY-130'
+class _DogCeo:
     def __init__(self, breed):
-        self.breed = breed.lower()
+        self.breed = breed
 
     def _input_accuracy(self):
         url = 'https://dog.ceo/api/breeds/list/all'
@@ -18,7 +16,7 @@ class DogCeo:
         response = requests.get(url).json()
         return response['message']
 
-    def _search_photos(self):
+    def search_photos(self):
         if not self._input_accuracy():
             print('Breed is not recognized')
             exit()
@@ -37,6 +35,17 @@ class DogCeo:
             url = f'https://dog.ceo/api/breed/{self.breed}/images/random'
             response = requests.get(url).json()
             return {f'{self.breed}': response['message']}
+
+
+
+class YaDisk:
+    token = 'ВВЕДИТЕ ВАШ ТОКЕН ЯНДЕКС ДИСКА'
+    group = 'FPY-130'
+    def __init__(self, breed):
+        self.breed = breed.lower()
+
+    def _call_dogceo(self):
+        return _DogCeo(self.breed).search_photos()
 
     def _create_folder(self, folder_name = ''):
         url_create_folder = 'https://cloud-api.yandex.net/v1/disk/resources'
@@ -69,7 +78,7 @@ class DogCeo:
         requests.put(upload_url, data=result_json.encode("utf-8"))
 
     def yadisk_upload_photo(self):
-        photos = self._search_photos()
+        photos = self._call_dogceo()
         self._create_folder()
         self._create_folder(self.breed)
         self._upload_photo(photos)
@@ -78,6 +87,5 @@ class DogCeo:
 
 if __name__ == '__main__':
     breed = input('Enter the breed: ')
-    dog = DogCeo(breed)
+    dog = YaDisk(breed)
     dog.yadisk_upload_photo()
-
