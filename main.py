@@ -2,8 +2,12 @@ import requests
 from tqdm import tqdm
 import json
 
-class _DogCeo:
-    def __init__(self, breed):
+def start_dogceo_yadisk(breed:str):
+    photos = DogCeo(breed).search_photos()
+    YaDisk(breed, photos).yadisk_upload_photo()
+
+class DogCeo:
+    def __init__(self, breed:str):
         self.breed = breed
 
     def _input_accuracy(self):
@@ -36,16 +40,12 @@ class _DogCeo:
             response = requests.get(url).json()
             return {f'{self.breed}': response['message']}
 
-
-
 class YaDisk:
-    token = 'ВВЕДИТЕ ВАШ ТОКЕН ЯНДЕКС ДИСКА'
+    token = 'ВВЕДИТЕ ВАШ ТОКЕН ОТ ЯНДЕКС ДИСКА'
     group = 'FPY-130'
-    def __init__(self, breed):
-        self.breed = breed.lower()
-
-    def _call_dogceo(self):
-        return _DogCeo(self.breed).search_photos()
+    def __init__(self, breed: str, photos: dict):
+        self.breed = breed
+        self.photos = photos
 
     def _create_folder(self, folder_name = ''):
         url_create_folder = 'https://cloud-api.yandex.net/v1/disk/resources'
@@ -53,20 +53,20 @@ class YaDisk:
         headers = {'Authorization': f'OAuth {self.token}'}
         requests.put(url_create_folder, params=params, headers=headers)
 
-    def _upload_photo(self, photos):
+    def _upload_photo(self):
         url_photo_upload = 'https://cloud-api.yandex.net/v1/disk/resources/upload'
         headers = {'Authorization': f'OAuth {self.token}'}
         print('\nUpload Photo')
-        for photo in tqdm(photos):
+        for photo in tqdm(self.photos):
             params = {
-                'path': f'{self.group}/{self.breed}/{photo}.{photos[photo].split("/")[-1][:-4]}',
-                'url': photos[photo],
+                'path': f'{self.group}/{self.breed}/{photo}.{self.photos[photo].split("/")[-1][:-4]}',
+                'url': self.photos[photo],
                 'disable_redirects': 'false'
             }
             requests.post(url_photo_upload, params=params, headers=headers)
 
-    def _file_result_json(self, photos):
-        result_json = json.dumps(photos, ensure_ascii=False)
+    def _file_result_json(self):
+        result_json = json.dumps(self.photos, ensure_ascii=False)
         url_upload_link = 'https://cloud-api.yandex.net/v1/disk/resources/upload'
         params = {
             'path': f'{self.group}/{self.breed}/result.json',
@@ -78,14 +78,15 @@ class YaDisk:
         requests.put(upload_url, data=result_json.encode("utf-8"))
 
     def yadisk_upload_photo(self):
-        photos = self._call_dogceo()
         self._create_folder()
         self._create_folder(self.breed)
-        self._upload_photo(photos)
-        self._file_result_json(photos)
+        self._upload_photo()
+        self._file_result_json()
 
 
 if __name__ == '__main__':
     breed = input('Enter the breed: ')
-    dog = YaDisk(breed)
-    dog.yadisk_upload_photo()
+    start_dogceo_yadisk(breed.lower())
+
+    # dog = YaDisk(breed)
+    # dog.yadisk_upload_photo()
