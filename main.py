@@ -35,6 +35,8 @@ class DogCeo:
                 photos[f'{self.breed}-{sub_breed}'] = response['message']
             return photos
 
+
+
         else:
             url = f'https://dog.ceo/api/breed/{self.breed}/images/random'
             response = requests.get(url).json()
